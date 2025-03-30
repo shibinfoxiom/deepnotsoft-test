@@ -1,15 +1,79 @@
-/* Additional app-specific styles can go here */
+/* Additional app-specific styles */
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
+/* Fix for table overflow on mobile */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 6px;
+}
+
+/* Improve button touch targets on mobile */
+button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Prevent text zoom on mobile */
+input,
+textarea,
+select,
+button {
+  font-size: 16px;
+}
+
+/* Improve form field focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -1px;
+}
+
+/* Improve modal scrolling on mobile */
+.modal-content {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Add loading spinner */
 .loading {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.loading::after {
+  content: "";
+  width: 30px;
+  height: 30px;
+  border: 3px solid #ccc;
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spinner 0.8s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {

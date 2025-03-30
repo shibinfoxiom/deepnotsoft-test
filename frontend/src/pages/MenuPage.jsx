@@ -60,6 +60,39 @@ const MenuPage = () => {
     return acc
   }, {})
 
+  // Add this function to refresh data when the component is focused
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        const data = await getAllMenus()
+        setMenus(data)
+        if (activeMenu) {
+          const items = await getMenuItemsByMenuId(activeMenu)
+          setMenuItems(items)
+        }
+      } catch (err) {
+        setError("Failed to refresh data")
+        console.error(err)
+      }
+    }
+
+    // Initial load
+    refreshData()
+
+    // Set up event listener for when the page becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshData()
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [activeMenu])
+
   return (
     <div className="menu-page">
       <div className="menu-hero">

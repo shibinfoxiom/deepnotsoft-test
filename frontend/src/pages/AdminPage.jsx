@@ -19,30 +19,41 @@ const AdminPage = () => {
   const [menuItems, setMenuItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState("")
 
   const [showMenuForm, setShowMenuForm] = useState(false)
   const [showMenuItemForm, setShowMenuItemForm] = useState(false)
   const [currentMenu, setCurrentMenu] = useState(null)
   const [currentMenuItem, setCurrentMenuItem] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Fetch menus and menu items
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const [menusData, menuItemsData] = await Promise.all([getAllMenus(), getAllMenuItems()])
-        setMenus(menusData)
-        setMenuItems(menuItemsData)
-      } catch (err) {
-        setError("Failed to load data")
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const [menusData, menuItemsData] = await Promise.all([getAllMenus(), getAllMenuItems()])
+      setMenus(menusData)
+      setMenuItems(menuItemsData)
+      setError(null)
+    } catch (err) {
+      setError("Failed to load data")
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchData()
   }, [])
+
+  // Show success message temporarily
+  const showSuccess = (message) => {
+    setSuccessMessage(message)
+    setTimeout(() => {
+      setSuccessMessage("")
+    }, 3000)
+  }
 
   // Menu CRUD operations
   const handleAddMenu = () => {
@@ -58,12 +69,20 @@ const AdminPage = () => {
   const handleDeleteMenu = async (menuId) => {
     if (!window.confirm("Are you sure you want to delete this menu?")) return
 
+    setIsDeleting(true)
     try {
       await deleteMenu(menuId)
-      setMenus(menus.filter((menu) => menu.id !== menuId))
+
+      // Update local state
+      setMenus((prevMenus) => prevMenus.filter((menu) => menu.id !== menuId))
+      setMenuItems((prevItems) => prevItems.filter((item) => item.menuId !== menuId))
+
+      showSuccess("Menu deleted successfully")
     } catch (err) {
-      setError("Failed to delete menu")
+      setError("Failed to delete menu. Please try again.")
       console.error(err)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -72,11 +91,13 @@ const AdminPage = () => {
       if (currentMenu) {
         // Update existing menu
         const updatedMenu = await updateMenu(currentMenu.id, formData)
-        setMenus(menus.map((menu) => (menu.id === currentMenu.id ? updatedMenu : menu)))
+        setMenus((prevMenus) => prevMenus.map((menu) => (menu.id === currentMenu.id ? updatedMenu : menu)))
+        showSuccess("Menu updated successfully")
       } else {
         // Create new menu
         const newMenu = await createMenu(formData)
-        setMenus([...menus, newMenu])
+        setMenus((prevMenus) => [...prevMenus, newMenu])
+        showSuccess("Menu created successfully")
       }
       setShowMenuForm(false)
     } catch (err) {
@@ -99,12 +120,19 @@ const AdminPage = () => {
   const handleDeleteMenuItem = async (menuItemId) => {
     if (!window.confirm("Are you sure you want to delete this menu item?")) return
 
+    setIsDeleting(true)
     try {
       await deleteMenuItem(menuItemId)
-      setMenuItems(menuItems.filter((item) => item.id !== menuItemId))
+
+      // Update local state
+      setMenuItems((prevItems) => prevItems.filter((item) => item.id !== menuItemId))
+
+      showSuccess("Menu item deleted successfully")
     } catch (err) {
-      setError("Failed to delete menu item")
+      setError("Failed to delete menu item. Please try again.")
       console.error(err)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -113,11 +141,13 @@ const AdminPage = () => {
       if (currentMenuItem) {
         // Update existing menu item
         const updatedMenuItem = await updateMenuItem(currentMenuItem.id, formData)
-        setMenuItems(menuItems.map((item) => (item.id === currentMenuItem.id ? updatedMenuItem : item)))
+        setMenuItems((prevItems) => prevItems.map((item) => (item.id === currentMenuItem.id ? updatedMenuItem : item)))
+        showSuccess("Menu item updated successfully")
       } else {
         // Create new menu item
         const newMenuItem = await createMenuItem(formData)
-        setMenuItems([...menuItems, newMenuItem])
+        setMenuItems((prevItems) => [...prevItems, newMenuItem])
+        showSuccess("Menu item created successfully")
       }
       setShowMenuItemForm(false)
     } catch (err) {
@@ -140,13 +170,18 @@ const AdminPage = () => {
       <h1>Menu Management</h1>
 
       {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      {isDeleting && <div className="info-message">Deleting...</div>}
 
       <div className="admin-actions">
-        <button className="add-button" onClick={handleAddMenu}>
+        <button className="add-button" onClick={handleAddMenu} disabled={isDeleting}>
           Add New Menu
         </button>
-        <button className="add-button" onClick={handleAddMenuItem}>
+        <button className="add-button" onClick={handleAddMenuItem} disabled={isDeleting || menus.length === 0}>
           Add New Menu Item
+        </button>
+        <button className="refresh-button" onClick={fetchData} disabled={isDeleting}>
+          Refresh Data
         </button>
       </div>
 
@@ -156,79 +191,103 @@ const AdminPage = () => {
         <div className="admin-content">
           <div className="menus-section">
             <h2>Menus</h2>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  {/* <th>Order</th> */}
-                  {/* <th>Status</th> */}
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {menus.map((menu) => (
-                  <tr key={menu.id}>
-                    <td>{menu.name}</td>
-                    <td>{menu.description}</td>
-                    {/* <td>{menu.order}</td> */}
-                    {/* <td>{menu.isActive ? "Active" : "Inactive"}</td> */}
-                    <td className="actions">
-                      <button className="edit-button" onClick={() => handleEditMenu(menu)}>
-                        Edit
-                      </button>
-                      <button className="delete-button" onClick={() => handleDeleteMenu(menu.id)}>
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {menus.length === 0 ? (
+              <p className="no-data">No menus available. Create your first menu!</p>
+            ) : (
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Description</th>
+                      <th>Order</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {menus.map((menu) => (
+                      <tr key={menu.id}>
+                        <td>{menu.name}</td>
+                        <td className="description-cell">{menu.description}</td>
+                        <td>{menu.order}</td>
+                        <td>{menu.isActive ? "Active" : "Inactive"}</td>
+                        <td className="actions">
+                          <button className="edit-button" onClick={() => handleEditMenu(menu)} disabled={isDeleting}>
+                            Edit
+                          </button>
+                          <button
+                            className="delete-button"
+                            onClick={() => handleDeleteMenu(menu.id)}
+                            disabled={isDeleting}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="menu-items-section">
             <h2>Menu Items</h2>
-            {menus.map((menu) => (
-              <div key={menu.id} className="menu-items-group">
-                <h3>{menu.name}</h3>
-                {menuItemsByMenu[menu.id] && menuItemsByMenu[menu.id].length > 0 ? (
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Price</th>
-                        {/* <th>Order</th> */}
-                        {/* <th>Status</th> */}
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {menuItemsByMenu[menu.id].map((item) => (
-                        <tr key={item.id}>
-                          <td>{item.name}</td>
-                          <td>{item.description}</td>
-                          <td>${Number.parseFloat(item.price).toFixed(2)}</td>
-                          {/* <td>{item.order}</td> */}
-                          {/* <td>{item.isActive ? "Active" : "Inactive"}</td> */}
-                          <td className="actions">
-                            <button className="edit-button" onClick={() => handleEditMenuItem(item)}>
-                              Edit
-                            </button>
-                            <button className="delete-button" onClick={() => handleDeleteMenuItem(item.id)}>
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p>No items in this menu</p>
-                )}
-              </div>
-            ))}
+            {menus.length === 0 ? (
+              <p className="no-data">Create a menu first to add menu items.</p>
+            ) : (
+              menus.map((menu) => (
+                <div key={menu.id} className="menu-items-group">
+                  <h3>{menu.name}</h3>
+                  {menuItemsByMenu[menu.id] && menuItemsByMenu[menu.id].length > 0 ? (
+                    <div className="table-responsive">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Order</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {menuItemsByMenu[menu.id].map((item) => (
+                            <tr key={item.id}>
+                              <td>{item.name}</td>
+                              <td className="description-cell">{item.description}</td>
+                              <td>${Number.parseFloat(item.price).toFixed(2)}</td>
+                              <td>{item.order}</td>
+                              <td>{item.isActive ? "Active" : "Inactive"}</td>
+                              <td className="actions">
+                                <button
+                                  className="edit-button"
+                                  onClick={() => handleEditMenuItem(item)}
+                                  disabled={isDeleting}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="delete-button"
+                                  onClick={() => handleDeleteMenuItem(item.id)}
+                                  disabled={isDeleting}
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="no-data">No items in this menu</p>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
