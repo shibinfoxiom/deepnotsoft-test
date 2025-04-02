@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development node backend/index.js",
-    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
+    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend && npx prisma generate --schema=backend/prisma/schema.prisma",
     "start": "cross-env NODE_ENV=production node backend/index.js"
   },
   "author": "",
@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3"
-  }
+  },
+  "prisma": {
+  "schema": "backend/prisma/schema.prisma"
+}
 }
