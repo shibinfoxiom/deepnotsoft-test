@@ -68,19 +68,21 @@ const AdminPage = () => {
 
   const handleDeleteMenu = async (menuId) => {
     if (!window.confirm("Are you sure you want to delete this menu?")) return
-
+    
     setIsDeleting(true)
     try {
+      // Optimistically update UI
+      setMenus(menus.filter((menu) => menu.id !== menuId))
+      setMenuItems(menuItems.filter((item) => item.menuId !== menuId))
+      
+      // Then attempt API call
       await deleteMenu(menuId)
-
-      // Update local state
-      setMenus((prevMenus) => prevMenus.filter((menu) => menu.id !== menuId))
-      setMenuItems((prevItems) => prevItems.filter((item) => item.menuId !== menuId))
-
       showSuccess("Menu deleted successfully")
     } catch (err) {
-      setError("Failed to delete menu. Please try again.")
+      setError("Failed to delete menu. Please refresh the page.")
       console.error(err)
+      // Refresh to ensure UI is consistent with backend
+      fetchData()
     } finally {
       setIsDeleting(false)
     }
@@ -91,12 +93,12 @@ const AdminPage = () => {
       if (currentMenu) {
         // Update existing menu
         const updatedMenu = await updateMenu(currentMenu.id, formData)
-        setMenus((prevMenus) => prevMenus.map((menu) => (menu.id === currentMenu.id ? updatedMenu : menu)))
+        setMenus(menus.map((menu) => (menu.id === currentMenu.id ? updatedMenu : menu)))
         showSuccess("Menu updated successfully")
       } else {
         // Create new menu
         const newMenu = await createMenu(formData)
-        setMenus((prevMenus) => [...prevMenus, newMenu])
+        setMenus([...menus, newMenu])
         showSuccess("Menu created successfully")
       }
       setShowMenuForm(false)
@@ -122,15 +124,17 @@ const AdminPage = () => {
 
     setIsDeleting(true)
     try {
+      // Optimistically update UI
+      setMenuItems(menuItems.filter((item) => item.id !== menuItemId))
+      
+      // Then attempt API call
       await deleteMenuItem(menuItemId)
-
-      // Update local state
-      setMenuItems((prevItems) => prevItems.filter((item) => item.id !== menuItemId))
-
       showSuccess("Menu item deleted successfully")
     } catch (err) {
-      setError("Failed to delete menu item. Please try again.")
+      setError("Failed to delete menu item. Please refresh the page.")
       console.error(err)
+      // Refresh to ensure UI is consistent with backend
+      fetchData()
     } finally {
       setIsDeleting(false)
     }
@@ -141,12 +145,12 @@ const AdminPage = () => {
       if (currentMenuItem) {
         // Update existing menu item
         const updatedMenuItem = await updateMenuItem(currentMenuItem.id, formData)
-        setMenuItems((prevItems) => prevItems.map((item) => (item.id === currentMenuItem.id ? updatedMenuItem : item)))
+        setMenuItems(menuItems.map((item) => (item.id === currentMenuItem.id ? updatedMenuItem : item)))
         showSuccess("Menu item updated successfully")
       } else {
         // Create new menu item
         const newMenuItem = await createMenuItem(formData)
-        setMenuItems((prevItems) => [...prevItems, newMenuItem])
+        setMenuItems([...menuItems, newMenuItem])
         showSuccess("Menu item created successfully")
       }
       setShowMenuItemForm(false)
@@ -213,11 +217,15 @@ const AdminPage = () => {
                         <td>{menu.order}</td>
                         <td>{menu.isActive ? "Active" : "Inactive"}</td>
                         <td className="actions">
-                          <button className="edit-button" onClick={() => handleEditMenu(menu)} disabled={isDeleting}>
+                          <button 
+                            className="edit-button" 
+                            onClick={() => handleEditMenu(menu)}
+                            disabled={isDeleting}
+                          >
                             Edit
                           </button>
-                          <button
-                            className="delete-button"
+                          <button 
+                            className="delete-button" 
                             onClick={() => handleDeleteMenu(menu.id)}
                             disabled={isDeleting}
                           >
@@ -262,15 +270,15 @@ const AdminPage = () => {
                               <td>{item.order}</td>
                               <td>{item.isActive ? "Active" : "Inactive"}</td>
                               <td className="actions">
-                                <button
-                                  className="edit-button"
+                                <button 
+                                  className="edit-button" 
                                   onClick={() => handleEditMenuItem(item)}
                                   disabled={isDeleting}
                                 >
                                   Edit
                                 </button>
-                                <button
-                                  className="delete-button"
+                                <button 
+                                  className="delete-button" 
                                   onClick={() => handleDeleteMenuItem(item.id)}
                                   disabled={isDeleting}
                                 >
@@ -309,4 +317,3 @@ const AdminPage = () => {
 }
 
 export default AdminPage
-

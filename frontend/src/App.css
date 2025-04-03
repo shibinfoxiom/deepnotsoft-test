@@ -5,53 +5,7 @@
   min-height: 100vh;
 }
 
-/* Fix for table overflow on mobile */
-.table-responsive {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.table-responsive::-webkit-scrollbar {
-  height: 6px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-  background: #222;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background-color: #555;
-  border-radius: 6px;
-}
-
-/* Improve button touch targets on mobile */
-button {
-  min-height: 44px;
-  touch-action: manipulation;
-}
-
-/* Prevent text zoom on mobile */
-input,
-textarea,
-select,
-button {
-  font-size: 16px;
-}
-
-/* Improve form field focus states */
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: -1px;
-}
-
-/* Improve modal scrolling on mobile */
-.modal-content {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Add loading spinner */
+/* Loading spinner */
 .loading {
   display: flex;
   justify-content: center;
@@ -76,6 +30,26 @@ select:focus {
   }
 }
 
+/* Fix for table overflow on mobile */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 6px;
+}
+
+/* Error message */
 .error-message {
   background-color: rgba(255, 68, 68, 0.2);
   border: 1px solid #ff4444;
